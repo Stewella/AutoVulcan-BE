@@ -18,7 +18,13 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
-@app.get(settings.API_V1_STR + "/health")
+# Public health endpoint (for API contract)
+@app.get("/health", tags=["System"], summary="Server health check")
+def root_health():
+    return {"status": "ok", "app": settings.APP_NAME}
+
+# Versioned health endpoint (kept for backward compatibility)
+@app.get(settings.API_V1_STR + "/health", tags=["System"], summary="Server health check (versioned)")
 def health():
     return {"status": "ok", "app": settings.APP_NAME}
 
