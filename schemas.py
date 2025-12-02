@@ -15,3 +15,24 @@ class RunResponse(BaseModel):
     execution_id: str
     message: str
     started_at: datetime
+
+# --- Auth Schemas ---
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class UserPublic(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    created_at: datetime
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class TokenPayload(BaseModel):
+    sub: str
+    exp: Optional[int] = None

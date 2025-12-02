@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime
+from sqlalchemy import Column, String, Text, DateTime, Integer, Boolean
 from datetime import datetime
 
 from db import Base
@@ -14,3 +14,14 @@ class Execution(Base):
     finished_at = Column(DateTime, nullable=True)
     # Optional: store original request for auditing
     request_json = Column(Text, nullable=True)
+
+# --- Auth models ---
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

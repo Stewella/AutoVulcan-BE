@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import json
 
-from models import Execution
+from models import Execution, User
 
 
 def create_execution(db: Session, execution_id: str, request_obj: dict) -> Execution:
@@ -20,7 +20,7 @@ def create_execution(db: Session, execution_id: str, request_obj: dict) -> Execu
 
 
 def update_execution_logs(db: Session, exec_id: str, logs: list[str]) -> None:
-    e = db.query(Execution).get(exec_id)
+    e = db.get(Execution, exec_id)
     if not e:
         return
     e.logs = json.dumps(logs)
@@ -28,10 +28,30 @@ def update_execution_logs(db: Session, exec_id: str, logs: list[str]) -> None:
 
 
 def update_execution_result(db: Session, exec_id: str, result: dict, status: str = "completed") -> None:
-    e = db.query(Execution).get(exec_id)
+    e = db.get(Execution, exec_id)
     if not e:
         return
     e.result_json = json.dumps(result or {})
     e.status = status
     e.finished_at = datetime.utcnow()
     db.commit()
+
+# --- User CRUD helpers ---
+
+from typing import Optional
+
+
+def get_user_by_username(db: Session, username: str) -> Optional[User]:
+    return db.query(User).filter(User.username == username).first()
+
+
+def get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email == email).first()
+
+
+def create_user(db: Session, username: str, email: str, hashed_password: str) -> User:
+    u = User(username=username, email=email, hashed_password=hashed_password)
+    db.add(u)
+    db.commit()
+    db.refresh(u)
+    return u
