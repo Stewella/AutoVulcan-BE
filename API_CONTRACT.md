@@ -21,10 +21,6 @@ Tujuan utamanya: menjalankan analisis otomatis terhadap project Java, memantau s
 | 1 | GET | `/health` | ❌ | Server health check |
 | 2 | POST | `/api/v1/auth/register` | ❌ | Register user |
 | 3 | POST | `/api/v1/auth/token` | ❌ | Login user (return JWT) |
-| 4 | POST | `/api/v1/analysis/run` | ✅ | Start SEIGE analysis pipeline |
-| 5 | GET | `/api/v1/analysis/status/{execution_id}` | ✅ | Get pipeline status + logs |
-| 6 | GET | `/api/v1/analysis/result/{execution_id}` | ✅ | Get final analysis result |
-| 7 | GET | `/api/v1/analysis/export/{execution_id}?format={json|pdf}` | ✅ | Export result (JSON/PDF) |
 | 8 | POST | `/api/v1/core/run` | ✅ | Proxy request ke core-engine |
 | 9 | POST | `/api/v1/analysis/reset` | ✅ | Reset pipeline (dev only) |
 
