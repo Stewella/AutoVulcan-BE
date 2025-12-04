@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 class RunRequest(BaseModel):
@@ -15,6 +15,23 @@ class RunResponse(BaseModel):
     execution_id: str
     message: str
     started_at: datetime
+
+# --- Graph Schemas ---
+class GraphNode(BaseModel):
+    id: str
+    label: str
+    type: str
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+
+class CallGraph(BaseModel):
+    nodes: List[GraphNode]
+    edges: List[GraphEdge]
+
+class CallGraphResponse(BaseModel):
+    callGraph: CallGraph
 
 # --- Auth Schemas ---
 class UserCreate(BaseModel):
