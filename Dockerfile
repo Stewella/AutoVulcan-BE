@@ -8,6 +8,9 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Install system dependencies required for repository cloning
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 # Install Python dependencies
 COPY requirements.txt ./
 RUN python3 -m pip install --no-cache-dir -r requirements.txt

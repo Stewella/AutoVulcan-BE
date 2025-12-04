@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from datetime import datetime
+from enum import Enum
 
 class RunRequest(BaseModel):
     repository_url: Optional[str] = None
@@ -15,6 +16,12 @@ class RunResponse(BaseModel):
     execution_id: str
     message: str
     started_at: datetime
+
+class CVEOption(str, Enum):
+    CVE_2021_44228 = "CVE-2021-44228"  # Log4Shell
+    CVE_2017_5638 = "CVE-2017-5638"    # Apache Struts Jakarta
+    CVE_2020_1472 = "CVE-2020-1472"    # Zerologon
+    OTHER = "OTHER"                      # Generic/Other
 
 # --- Graph Schemas ---
 class GraphNode(BaseModel):
