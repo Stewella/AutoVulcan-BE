@@ -1,0 +1,11 @@
+# Do not include secrets and local data in Docker image
+.env
+executions/
+__pycache__/
+*.pyc
+*.db
+.devcontainer/
+.git/
+.gitignore
+README.md
+API_CONTRACT.md

@@ -1,0 +1,9 @@
+# Ignore environment secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local data and temporary files
+executions/

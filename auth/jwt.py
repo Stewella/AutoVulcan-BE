@@ -13,7 +13,7 @@ from crud import get_user_by_username
 from schemas import TokenPayload
 
 # OAuth2 scheme for Swagger "Authorize" button
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.API_V1_STR + "/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.API_V1_STR + "/auth/token", scheme_name="OAuth2Email")
 
 
 def hash_password(password: str) -> str:

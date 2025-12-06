@@ -6,10 +6,11 @@ from db import get_db
 from crud import get_user_by_username, get_user_by_email, create_user
 from auth.jwt import hash_password, verify_password, create_access_token, get_current_user
 from schemas import UserPublic, Token
+from typing import Optional
 
 router = APIRouter(prefix="/auth", tags=["Auth"]) 
 
-@router.post("/register", response_model=UserPublic, summary="Register user")
+@router.post("/register", response_model=Token, summary="Register user (returns JWT)")
 def register_user(
     full_name: str = Form(..., description="Full name"),
     email: str = Form(..., description="Email"),
@@ -35,20 +36,24 @@ def register_user(
 
     hashed = hash_password(password)
     user = create_user(db, username=candidate, email=email, hashed_password=hashed, full_name=full_name)
-    return UserPublic(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        full_name=user.full_name,
-        is_active=user.is_active,
-        created_at=user.created_at,
-    )
+    access_token = create_access_token(subject=user.username)
+    return Token(access_token=access_token, token_type="bearer")
 
-@router.post("/token", response_model=Token, summary="Login user (return JWT)")
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = get_user_by_username(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+@router.post("/token", response_model=Token, summary="Login user with email (return JWT)")
+def login_for_access_token(
+    email: Optional[str] = Form(None, description="Email"),
+    username: Optional[str] = Form(None, description="Username (treated as email for OAuth2 UI)"),
+    password: str = Form(..., description="Password"),
+    db: Session = Depends(get_db),
+):
+    # Support both 'email' and OAuth2PasswordRequestForm's 'username' (treated as email)
+    login_email = email or username
+    if not login_email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is required")
+
+    user = get_user_by_email(db, login_email)
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
 
     access_token = create_access_token(subject=user.username)
     return Token(access_token=access_token, token_type="bearer")
