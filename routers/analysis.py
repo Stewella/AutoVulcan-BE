@@ -1,15 +1,18 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 from db import get_db
-from schemas import RunRequest, RunResponse, CallGraphResponse, CVEOption
+from schemas import RunRequest, RunResponse, CallGraphResponse
 from services.pipeline import new_execution_id, schedule_pipeline
 from auth.jwt import get_current_user
 from datetime import datetime
 from fastapi import File, UploadFile, Form
-from typing import Optional, Union
+from typing import Optional
 import os
 import zipfile
+import re
+import json
 from crud import create_execution
+from models import Execution
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
@@ -67,9 +70,9 @@ SAMPLE_CALL_GRAPH = {
 }
 
 
-def normalize_cve(cve: Union[CVEOption, str]) -> str:
-    """Return CVE as string, regardless of whether CVEOption enum or plain str was passed."""
-    return cve.value if isinstance(cve, CVEOption) else str(cve)
+def normalize_cve(cve: str) -> str:
+    """Return CVE as string (already validated and normalized upstream)."""
+    return cve
 
 
 def schedule_exec(background_tasks: BackgroundTasks, exec_id: str, request_obj: dict) -> None:
@@ -80,7 +83,7 @@ def schedule_exec(background_tasks: BackgroundTasks, exec_id: str, request_obj: 
 def make_request_obj(
     *,
     source_type: str,
-    target_cve: Union[CVEOption, str],
+    target_cve: str,
     target_method: Optional[str],
     target_line: Optional[int],
     timeout_seconds: int,
@@ -159,16 +162,37 @@ def run_analysis(
 
 
 @router.get("/graph", response_model=CallGraphResponse, summary="Get call graph")
-def get_call_graph():
-    """Return a sample call graph for demonstration purposes."""
+def get_call_graph(execution_id: Optional[str] = None, db: Session = Depends(get_db)):
+    """Return a sample call graph. Real call graph not implemented yet."""
     return SAMPLE_CALL_GRAPH
+
+
+# Accept CVE in format CVE-YYYY-NNNN+ or the literal OTHER; also accept GHSA-xxxx-xxxx-xxxx
+CVE_REGEX = re.compile(r"^CVE-\d{4}-\d{4,}$", re.IGNORECASE)
+GHSA_REGEX = re.compile(r"^GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$", re.IGNORECASE)
+
+
+def validate_cve_format(cve: str) -> str:
+    if cve is None:
+        raise HTTPException(status_code=400, detail="target_cve is required")
+    c = cve.strip()
+    if c.upper() == "OTHER":
+        return "OTHER"
+    if CVE_REGEX.match(c):
+        parts = c.split("-")
+        return f"CVE-{parts[1]}-{parts[2]}"
+    if GHSA_REGEX.match(c):
+        parts = c.split("-")
+        # normalize to standard GHSA lowercase blocks
+        return f"GHSA-{parts[1].lower()}-{parts[2].lower()}-{parts[3].lower()}"
+    raise HTTPException(status_code=400, detail="target_cve must follow CVE-YYYY-NNNN+ or GHSA-xxxx-xxxx-xxxx format, or be 'OTHER'")
 
 
 @router.post("/submit/repo", response_model=RunResponse, summary="Submit analysis via repository URL")
 def submit_repo(
     background_tasks: BackgroundTasks,
     repository_url: str = Form(..., description="Git repository URL to fetch"),
-    target_cve: CVEOption = Form(..., description="Target CVE to analyze"),
+    target_cve: str = Form(..., description="Target identifier: CVE-YYYY-NNNN+ or GHSA-xxxx-xxxx-xxxx, or OTHER"),
     target_method: Optional[str] = Form(None, description="Method to focus on"),
     target_line: Optional[int] = Form(None, description="Line number to focus on"),
     timeout_seconds: Optional[int] = Form(600, description="Timeout for analysis in seconds"),
@@ -176,11 +200,12 @@ def submit_repo(
     current_user=Depends(get_current_user),
 ):
     """Submit an analysis job by providing a repository URL and target parameters."""
+    target_cve_clean = validate_cve_format(target_cve)
     exec_id = new_execution_id()
     request_obj = make_request_obj(
         source_type="repo",
         repository_url=repository_url,
-        target_cve=target_cve,
+        target_cve=target_cve_clean,
         target_method=target_method,
         target_line=target_line,
         timeout_seconds=timeout_seconds or 600,
@@ -202,7 +227,7 @@ def submit_repo(
 def submit_zip(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="ZIP file containing source code"),
-    target_cve: CVEOption = Form(..., description="Target CVE to analyze"),
+    target_cve: str = Form(..., description="Target identifier: CVE-YYYY-NNNN+ or GHSA-xxxx-xxxx-xxxx, or OTHER"),
     target_method: Optional[str] = Form(None, description="Method to focus on"),
     target_line: Optional[int] = Form(None, description="Line number to focus on"),
     timeout_seconds: Optional[int] = Form(600, description="Timeout for analysis in seconds"),
@@ -212,6 +237,8 @@ def submit_zip(
     """Submit an analysis job by uploading a ZIP archive of source code."""
     if file.content_type not in ALLOWED_ZIP_TYPES:
         raise HTTPException(status_code=400, detail="Uploaded file must be a ZIP archive")
+
+    target_cve_clean = validate_cve_format(target_cve)
 
     exec_id = new_execution_id()
     base_dir = ensure_execution_dir(exec_id)
@@ -225,7 +252,7 @@ def submit_zip(
     request_obj = make_request_obj(
         source_type="zip",
         source_path=extract_dir,
-        target_cve=target_cve,
+        target_cve=target_cve_clean,
         target_method=target_method,
         target_line=target_line,
         timeout_seconds=timeout_seconds or 600,
