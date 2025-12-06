@@ -23,5 +23,7 @@ class User(Base):
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
+    # store full name as optional to maintain backward compatibility
+    full_name = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)

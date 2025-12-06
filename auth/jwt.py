@@ -49,4 +49,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = get_user_by_username(db, payload.sub)
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
-    return {"id": user.id, "username": user.username, "email": user.email, "is_active": user.is_active, "created_at": user.created_at}
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "full_name": getattr(user, "full_name", None),
+        "is_active": user.is_active,
+        "created_at": user.created_at,
+    }

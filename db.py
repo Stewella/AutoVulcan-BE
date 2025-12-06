@@ -72,3 +72,23 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
+
+# --- lightweight, runtime-safe schema upgrade helpers ---
+# We avoid full migrations here and only add missing columns if needed.
+from sqlalchemy import inspect, text
+
+def ensure_schema_upgrades() -> None:
+    try:
+        inspector = inspect(engine)
+        # users table: add full_name if missing
+        cols = [c['name'] for c in inspector.get_columns('users')]
+        if 'full_name' not in cols:
+            # SQLite and Postgres both accept VARCHAR syntax here; use TEXT for sqlite for compatibility
+            with engine.begin() as conn:
+                if is_sqlite:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN full_name TEXT"))
+                else:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(255)"))
+    except Exception:
+        # Silently ignore to avoid crashing startup; app will still run
+        pass

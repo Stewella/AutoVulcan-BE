@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from db import engine, Base
+from db import engine, Base, ensure_schema_upgrades
 from routers import analysis as analysis_router, status as status_router, result as result_router, core_engine as core_router, auth as auth_router
 import models
 
@@ -17,6 +17,8 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
+# apply light schema upgrades for backwards compatibility
+ensure_schema_upgrades()
 
 # Public health endpoint (for API contract)
 @app.get("/health", tags=["System"], summary="Server health check")

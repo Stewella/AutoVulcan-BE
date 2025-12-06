@@ -50,6 +50,7 @@ class UserPublic(BaseModel):
     id: int
     username: str
     email: str
+    full_name: Optional[str] = None
     is_active: bool
     created_at: datetime
 
