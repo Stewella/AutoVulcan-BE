@@ -37,10 +37,10 @@ SAMPLE_CALL_GRAPH = {
             {"id": "n7",  "label": "Utils.log()", "type": "intermediate"},
             {"id": "n8",  "label": "Utils.printSummary()", "type": "intermediate"},
             {"id": "n9",  "label": "Repository.save()", "type": "intermediate"},
-            {"id": "n10", "label": "PrintStream.println()", "type": "system"},
+            {"id": "n10", "label": "PrintStream.println()", "type": "intermediate"},
             {"id": "n11", "label": "ServiceB.transform()", "type": "intermediate"},
-            {"id": "n12", "label": "String.toUpperCase()", "type": "system"},
-            {"id": "n13", "label": "Object.<init>()", "type": "system"},
+            {"id": "n12", "label": "String.toUpperCase()", "type": "intermediate"},
+            {"id": "n13", "label": "Object.<init>()", "type": "intermediate"},
             {"id": "n14", "label": "ServiceA.<init>()", "type": "intermediate"},
         ],
         "edges": [
