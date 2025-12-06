@@ -12,6 +12,7 @@ def create_execution(db: Session, execution_id: str, request_obj: dict) -> Execu
         logs=json.dumps([]),
         started_at=datetime.utcnow(),
         request_json=json.dumps(request_obj or {}),
+        submitted_by_user_id=(request_obj or {}).get("submitted_by_user_id"),
     )
     db.add(e)
     db.commit()

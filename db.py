@@ -89,6 +89,12 @@ def ensure_schema_upgrades() -> None:
                     conn.execute(text("ALTER TABLE users ADD COLUMN full_name TEXT"))
                 else:
                     conn.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(255)"))
+        # executions table: add submitted_by_user_id if missing
+        exec_cols = [c['name'] for c in inspector.get_columns('executions')]
+        if 'submitted_by_user_id' not in exec_cols:
+            with engine.begin() as conn:
+                # INTEGER works for both sqlite and postgres
+                conn.execute(text("ALTER TABLE executions ADD COLUMN submitted_by_user_id INTEGER"))
     except Exception:
         # Silently ignore to avoid crashing startup; app will still run
         pass

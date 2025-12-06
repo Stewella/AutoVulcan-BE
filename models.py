@@ -13,6 +13,7 @@ class Execution(Base):
     started_at = Column(DateTime, default=datetime.utcnow)
     finished_at = Column(DateTime, nullable=True)
     # Optional: store original request for auditing
+    submitted_by_user_id = Column(Integer, nullable=True)
     request_json = Column(Text, nullable=True)
 
 # --- Auth models ---

@@ -13,16 +13,30 @@ def new_execution_id():
 
 def schedule_pipeline(execution_id: str, request_obj: dict):
     """
-    Entry called by BackgroundTasks; will open a DB session, create execution and then run async loop.
+    Entry called by BackgroundTasks; will open a DB session, create/update execution record and then run async loop.
     We keep it synchronous wrapper to be BackgroundTasks-friendly.
     """
     # create DB session
     from db import SessionLocal
     db = SessionLocal()
     try:
-        create_execution(db, execution_id, request_obj)
+        # ensure execution exists; if already created by the submit endpoint, update status to running
+        try:
+            from models import Execution  # local import to avoid circular
+            existing = db.get(Execution, execution_id)
+        except Exception:
+            existing = None
+        if existing is None:
+            create_execution(db, execution_id, request_obj)
+        else:
+            from datetime import datetime
+            existing.status = "running"
+            existing.request_json = json.dumps(request_obj or {})
+            if not existing.started_at:
+                existing.started_at = datetime.utcnow()
+            existing.logs = json.dumps([])
+            db.commit()
         # run actual async pipeline with asyncio loop
-        import asyncio
         asyncio.run(_run_pipeline(db, execution_id, request_obj))
     finally:
         db.close()
