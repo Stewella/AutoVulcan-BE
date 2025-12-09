@@ -1,6 +1,7 @@
 import os
 import subprocess
 import json
+import re
 from typing import List, Dict, Optional
 
 from config import settings
@@ -42,7 +43,58 @@ def _docker_run(image: str, mounts: List[str], bash_cmd: str, timeout: int) -> s
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=timeout)
 
 
-def run_evosuite_in_docker(source_dir: str, timeout: int = 600, max_classes: int = 10, search_budget: Optional[int] = None) -> Dict:
+def _find_classes_with_method(root: str, method_name: str) -> List[str]:
+    """Scan Java sources to find classes that declare or reference the given method name.
+    Returns a list of simple class names (file names without .java).
+    """
+    matches: set[str] = set()
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDE_DIRS]
+        for f in filenames:
+            if f.endswith(".java"):
+                p = os.path.join(dirpath, f)
+                try:
+                    with open(p, "r", encoding="utf-8", errors="ignore") as fh:
+                        txt = fh.read()
+                    if re.search(rf"\b{re.escape(method_name)}\s*\(", txt):
+                        matches.add(f[:-5])
+                except Exception:
+                    pass
+    return list(matches)
+
+
+def _extract_reachability_from_tests(source_dir: str, tests_root: str, method_name: str) -> List[Dict]:
+    """Parse EvoSuite-generated test files to find calls to the target method and basic test method names."""
+    result: List[Dict] = []
+    for dirpath, _, filenames in os.walk(tests_root):
+        for f in filenames:
+            if f.endswith(".java"):
+                p = os.path.join(dirpath, f)
+                occurrences = []
+                try:
+                    with open(p, "r", encoding="utf-8", errors="ignore") as fh:
+                        for idx, line in enumerate(fh, start=1):
+                            if re.search(rf"\b{re.escape(method_name)}\s*\(", line):
+                                occurrences.append({"line": idx, "code": line.strip()})
+                except Exception:
+                    continue
+                if occurrences:
+                    # attempt to find test method identifiers
+                    try:
+                        with open(p, "r", encoding="utf-8", errors="ignore") as fh:
+                            text = fh.read()
+                        test_methods = re.findall(r"void\s+(test[\w_]*)\s*\(", text)
+                    except Exception:
+                        test_methods = []
+                    result.append({
+                        "test_file": os.path.relpath(p, source_dir),
+                        "occurrences": occurrences,
+                        "test_methods": test_methods,
+                    })
+    return result
+
+
+def run_evosuite_in_docker(source_dir: str, timeout: int = 600, max_classes: int = 10, search_budget: Optional[int] = None, target_method_name: Optional[str] = None) -> Dict:
     """
     Compile and run EvoSuite directly inside the backend container.
 
@@ -81,6 +133,7 @@ def run_evosuite_in_docker(source_dir: str, timeout: int = 600, max_classes: int
         "search_budget": search_budget,
         "compile": {},
         "generated_tests": [],
+        "target_method": target_method_name,
     }
 
     if os.path.isfile(pom_path):
@@ -138,7 +191,12 @@ def run_evosuite_in_docker(source_dir: str, timeout: int = 600, max_classes: int
         payload["error"] = "No compiled classes found after compilation"
         return payload
 
-    classes_to_test = compiled_classes[:max_classes]
+    if target_method_name:
+        simple_matches = _find_classes_with_method(source_dir, target_method_name)
+        filtered = [c for c in compiled_classes if c.split(".")[-1] in simple_matches]
+        classes_to_test = filtered[:max_classes] if filtered else compiled_classes[:max_classes]
+    else:
+        classes_to_test = compiled_classes[:max_classes]
 
     for cls in classes_to_test:
         evosuite_cmd = (
@@ -166,5 +224,8 @@ def run_evosuite_in_docker(source_dir: str, timeout: int = 600, max_classes: int
             "status": "success" if proc.returncode == 0 else "failed",
             "test_files": generated,
         })
+
+    if target_method_name:
+        payload["reachability"] = _extract_reachability_from_tests(source_dir, tests_root, target_method_name)
 
     return payload

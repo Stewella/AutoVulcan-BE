@@ -83,17 +83,361 @@ DEFAULT_SAMPLE_CALL_GRAPH = {
     }
 }
 
-# Pet Shop dummy graph to return when request indicates petshop
 PETSHOP_SAMPLE_CALL_GRAPH = {
-    "callGraph": {
-        "nodes": [
-            {"id": "n1", "label": "PetShopApplication.main()", "type": "entry"},
-            {"id": "n2", "label": "SpringApplication.run()", "type": "vulnerable"},
-        ],
-        "edges": [
-            {"source": "n1", "target": "n2"},
-        ],
-    }
+  "callGraph": {
+    "nodes": [
+      { "id": "n13", "label": "com.petstore.domain.Customer.getName()", "type": "intermediate" },
+      { "id": "n50", "label": "com.petstore.api.PetStoreApplication.demonstrateVulnerableChains()", "type": "intermediate" },
+      { "id": "n19", "label": "com.petstore.api.controller.PetController.batchProcess()", "type": "intermediate" },
+      { "id": "n34", "label": "com.petstore.service.PetService.createCustomPetListing()", "type": "intermediate" },
+      { "id": "n40", "label": "com.petstore.api.controller.OrderController.createOrder()", "type": "intermediate" },
+      { "id": "n56", "label": "java.lang.String.format()", "type": "intermediate" },
+      { "id": "n32", "label": "com.petstore.domain.Order.getStatus()", "type": "intermediate" },
+      { "id": "n35", "label": "com.petstore.data.PetRepository.generatePetListing()", "type": "intermediate" },
+      { "id": "n74", "label": "com.petstore.domain.Pet.getName()", "type": "intermediate" },
+      { "id": "n86", "label": "com.petstore.api.controller.CustomerController.getAllCustomers()", "type": "intermediate" },
+      { "id": "n65", "label": "java.lang.StringBuilder.append()", "type": "intermediate" },
+      { "id": "n24", "label": "com.petstore.data.TemplateProcessor.<init>()", "type": "intermediate" },
+      { "id": "n42", "label": "com.petstore.service.CustomerService.<init>()", "type": "intermediate" },
+      { "id": "n44", "label": "com.petstore.api.PetStoreApplication.main()", "type": "entry" },
+      { "id": "n66", "label": "com.petstore.data.CustomerRepository.generateWelcomeMessage()", "type": "intermediate" },
+      { "id": "n62", "label": "com.petstore.data.OrderRepository.<init>()", "type": "intermediate" },
+      { "id": "n49", "label": "com.petstore.api.PetStoreApplication.demonstrateNormalOperations()", "type": "intermediate" },
+      { "id": "n2", "label": "com.petstore.domain.Customer.<init>()", "type": "intermediate" },
+      { "id": "n29", "label": "com.petstore.domain.Order.getPetId()", "type": "intermediate" },
+      { "id": "n9", "label": "com.petstore.api.controller.OrderController.confirmOrder()", "type": "intermediate" },
+      { "id": "n11", "label": "com.petstore.data.CustomerRepository.formatNotification()", "type": "intermediate" },
+      { "id": "n15", "label": "java.util.Map.values()", "type": "intermediate" },
+      { "id": "n55", "label": "java.lang.Integer.valueOf()", "type": "intermediate" },
+      { "id": "n23", "label": "java.util.concurrent.ConcurrentHashMap.<init>()", "type": "intermediate" },
+      { "id": "n61", "label": "com.petstore.api.controller.PetController.createCustomListing()", "type": "intermediate" },
+      { "id": "n16", "label": "java.util.ArrayList.<init>()", "type": "intermediate" },
+      { "id": "n25", "label": "com.petstore.data.OrderRepository.generateOrderConfirmation()", "type": "intermediate" },
+      { "id": "n63", "label": "com.petstore.service.OrderService.generateCompleteOrderReport()", "type": "intermediate" },
+      { "id": "n36", "label": "com.petstore.service.CustomerService.getAllCustomers()", "type": "intermediate" },
+      { "id": "n48", "label": "com.petstore.api.controller.OrderController.<init>()", "type": "intermediate" },
+      { "id": "n75", "label": "com.petstore.domain.Pet.getSpecies()", "type": "intermediate" },
+      { "id": "n39", "label": "com.petstore.service.PetService.<init>()", "type": "intermediate" },
+      { "id": "n64", "label": "java.lang.StringBuilder.<init>()", "type": "intermediate" },
+      { "id": "n70", "label": "com.petstore.data.PetRepository.<init>()", "type": "intermediate" },
+      { "id": "n59", "label": "com.petstore.domain.Order.<init>()", "type": "intermediate" },
+      { "id": "n1", "label": "com.petstore.data.CustomerRepository.initializeSampleData()", "type": "intermediate" },
+      { "id": "n7", "label": "com.petstore.service.PetService.getAllPets()", "type": "intermediate" },
+      { "id": "n4", "label": "com.petstore.data.PetRepository.savePet()", "type": "intermediate" },
+      { "id": "n26", "label": "java.util.HashMap.<init>()", "type": "intermediate" },
+      { "id": "n14", "label": "com.petstore.data.TemplateProcessor.formatMessage()", "type": "intermediate" },
+      { "id": "n30", "label": "com.petstore.domain.Order.getTotalAmount()", "type": "intermediate" },
+      { "id": "n72", "label": "com.petstore.data.PetRepository.initializeSampleData()", "type": "intermediate" },
+      { "id": "n69", "label": "com.petstore.service.PetService.generatePetAdvertisement()", "type": "intermediate" },
+      { "id": "n41", "label": "com.petstore.service.OrderService.createOrder()", "type": "intermediate" },
+      { "id": "n77", "label": "com.petstore.domain.Pet.getStatus()", "type": "intermediate" },
+      { "id": "n37", "label": "com.petstore.data.CustomerRepository.findAll()", "type": "intermediate" },
+      { "id": "n58", "label": "com.petstore.domain.Pet.getPrice()", "type": "intermediate" },
+      { "id": "n22", "label": "java.lang.Object.<init>()", "type": "intermediate" },
+      { "id": "n3", "label": "com.petstore.data.CustomerRepository.saveCustomer()", "type": "intermediate" },
+      { "id": "n54", "label": "java.lang.Math.random()", "type": "intermediate" },
+      { "id": "n85", "label": "com.petstore.api.controller.PetController.getAllPets()", "type": "intermediate" },
+      { "id": "n20", "label": "com.petstore.service.PetService.batchProcessPetDescriptions()", "type": "intermediate" },
+      { "id": "n76", "label": "com.petstore.domain.Pet.getBreed()", "type": "intermediate" },
+      { "id": "n53", "label": "com.petstore.data.OrderRepository.saveOrder()", "type": "intermediate" },
+      { "id": "n68", "label": "java.lang.StringBuilder.toString()", "type": "intermediate" },
+      { "id": "n12", "label": "com.petstore.data.CustomerRepository.findById()", "type": "intermediate" },
+      { "id": "n47", "label": "com.petstore.api.controller.CustomerController.<init>()", "type": "intermediate" },
+      { "id": "n33", "label": "com.petstore.data.TemplateProcessor.processTemplate()", "type": "intermediate" },
+      { "id": "n52", "label": "com.petstore.service.CustomerService.sendCustomNotification()", "type": "intermediate" },
+      { "id": "n31", "label": "java.lang.String.valueOf()", "type": "intermediate" },
+      { "id": "n57", "label": "java.time.LocalDateTime.now()", "type": "intermediate" },
+      { "id": "n71", "label": "com.petstore.api.controller.PetController.getPetAdvertisement()", "type": "intermediate" },
+      { "id": "n81", "label": "java.util.List.iterator()", "type": "intermediate" },
+      { "id": "n67", "label": "com.petstore.data.PetRepository.generatePetDescription()", "type": "intermediate" },
+      { "id": "n6", "label": "java.util.Map.put()", "type": "intermediate" },
+      { "id": "n80", "label": "com.petstore.api.controller.OrderController.getCompleteReport()", "type": "intermediate" },
+      { "id": "n87", "label": "com.petstore.domain.Customer.getEmail()", "type": "intermediate" },
+      { "id": "n18", "label": "java.util.Map.get()", "type": "intermediate" },
+      { "id": "n43", "label": "com.petstore.data.PetRepository.findById()", "type": "intermediate" },
+      { "id": "n5", "label": "com.petstore.domain.Pet.getId()", "type": "intermediate" },
+      { "id": "n27", "label": "com.petstore.domain.Order.getId()", "type": "intermediate" },
+      { "id": "n84", "label": "com.petstore.domain.Customer.getId()", "type": "intermediate" },
+      { "id": "n46", "label": "java.io.PrintStream.println()", "type": "intermediate" },
+      { "id": "n10", "label": "com.petstore.service.OrderService.processOrderConfirmation()", "type": "intermediate" },
+      { "id": "n82", "label": "java.util.Iterator.hasNext()", "type": "intermediate" },
+      { "id": "n17", "label": "com.petstore.data.OrderRepository.findById()", "type": "intermediate" },
+      { "id": "n78", "label": "org.apache.commons.text.StringSubstitutor.<init>()", "type": "intermediate" },
+      { "id": "n8", "label": "com.petstore.data.PetRepository.findAll()", "type": "intermediate" },
+      { "id": "n45", "label": "java.io.PrintStream.println()", "type": "intermediate" },
+      { "id": "n79", "label": "org.apache.commons.text.StringSubstitutor.replace()", "type": "intermediate" },
+      { "id": "n38", "label": "com.petstore.api.controller.PetController.<init>()", "type": "intermediate" },
+      { "id": "n28", "label": "com.petstore.domain.Order.getCustomerId()", "type": "intermediate" },
+      { "id": "n51", "label": "com.petstore.api.controller.CustomerController.sendNotification()", "type": "intermediate" },
+      { "id": "n88", "label": "java.util.Arrays.asList()", "type": "intermediate" },
+      { "id": "n73", "label": "com.petstore.domain.Pet.<init>()", "type": "intermediate" },
+      { "id": "n21", "label": "com.petstore.data.CustomerRepository.<init>()", "type": "intermediate" },
+      { "id": "n83", "label": "java.util.Iterator.next()", "type": "intermediate" },
+      { "id": "n60", "label": "com.petstore.service.OrderService.<init>()", "type": "intermediate" }
+    ],
+    "edges": [
+      { "source": "n1", "target": "n2" },
+      { "source": "n1", "target": "n3" },
+      { "source": "n1", "target": "n2" },
+      { "source": "n1", "target": "n3" },
+      { "source": "n4", "target": "n5" },
+      { "source": "n4", "target": "n6" },
+      { "source": "n7", "target": "n8" },
+      { "source": "n9", "target": "n10" },
+      { "source": "n11", "target": "n12" },
+      { "source": "n11", "target": "n13" },
+      { "source": "n11", "target": "n14" },
+      { "source": "n8", "target": "n15" },
+      { "source": "n8", "target": "n16" },
+      { "source": "n17", "target": "n18" },
+      { "source": "n19", "target": "n20" },
+      { "source": "n12", "target": "n18" },
+      { "source": "n21", "target": "n22" },
+      { "source": "n21", "target": "n23" },
+      { "source": "n21", "target": "n24" },
+      { "source": "n21", "target": "n1" },
+      { "source": "n25", "target": "n17" },
+      { "source": "n25", "target": "n26" },
+      { "source": "n25", "target": "n27" },
+      { "source": "n25", "target": "n6" },
+      { "source": "n25", "target": "n28" },
+      { "source": "n25", "target": "n6" },
+      { "source": "n25", "target": "n29" },
+      { "source": "n25", "target": "n6" },
+      { "source": "n25", "target": "n30" },
+      { "source": "n25", "target": "n31" },
+      { "source": "n25", "target": "n6" },
+      { "source": "n25", "target": "n32" },
+      { "source": "n25", "target": "n6" },
+      { "source": "n25", "target": "n33" },
+      { "source": "n34", "target": "n35" },
+      { "source": "n36", "target": "n37" },
+      { "source": "n38", "target": "n22" },
+      { "source": "n38", "target": "n39" },
+      { "source": "n40", "target": "n41" },
+      { "source": "n42", "target": "n22" },
+      { "source": "n42", "target": "n21" },
+      { "source": "n43", "target": "n18" },
+      { "source": "n44", "target": "n45" },
+      { "source": "n44", "target": "n45" },
+      { "source": "n44", "target": "n46" },
+      { "source": "n44", "target": "n38" },
+      { "source": "n44", "target": "n47" },
+      { "source": "n44", "target": "n48" },
+      { "source": "n44", "target": "n49" },
+      { "source": "n44", "target": "n46" },
+      { "source": "n44", "target": "n45" },
+      { "source": "n44", "target": "n50" },
+      { "source": "n44", "target": "n46" },
+      { "source": "n44", "target": "n45" },
+      { "source": "n44", "target": "n45" },
+      { "source": "n51", "target": "n52" },
+      { "source": "n53", "target": "n27" },
+      { "source": "n53", "target": "n6" },
+      { "source": "n41", "target": "n12" },
+      { "source": "n41", "target": "n43" },
+      { "source": "n41", "target": "n54" },
+      { "source": "n41", "target": "n55" },
+      { "source": "n41", "target": "n56" },
+      { "source": "n41", "target": "n57" },
+      { "source": "n41", "target": "n58" },
+      { "source": "n41", "target": "n59" },
+      { "source": "n41", "target": "n53" },
+      { "source": "n48", "target": "n22" },
+      { "source": "n48", "target": "n60" },
+      { "source": "n61", "target": "n34" },
+      { "source": "n62", "target": "n22" },
+      { "source": "n62", "target": "n23" },
+      { "source": "n62", "target": "n24" },
+      { "source": "n52", "target": "n11" },
+      { "source": "n63", "target": "n17" },
+      { "source": "n63", "target": "n64" },
+      { "source": "n63", "target": "n65" },
+      { "source": "n63", "target": "n25" },
+      { "source": "n63", "target": "n65" },
+      { "source": "n63", "target": "n65" },
+      { "source": "n63", "target": "n28" },
+      { "source": "n63", "target": "n66" },
+      { "source": "n63", "target": "n65" },
+      { "source": "n63", "target": "n65" },
+      { "source": "n63", "target": "n29" },
+      { "source": "n63", "target": "n43" },
+      { "source": "n63", "target": "n67" },
+      { "source": "n63", "target": "n65" },
+      { "source": "n63", "target": "n65" },
+      { "source": "n63", "target": "n68" },
+      { "source": "n69", "target": "n43" },
+      { "source": "n69", "target": "n67" },
+      { "source": "n24", "target": "n22" },
+      { "source": "n37", "target": "n15" },
+      { "source": "n37", "target": "n16" },
+      { "source": "n39", "target": "n22" },
+      { "source": "n39", "target": "n70" },
+      { "source": "n59", "target": "n22" },
+      { "source": "n71", "target": "n69" },
+      { "source": "n72", "target": "n73" },
+      { "source": "n72", "target": "n4" },
+      { "source": "n72", "target": "n73" },
+      { "source": "n72", "target": "n4" },
+      { "source": "n72", "target": "n73" },
+      { "source": "n72", "target": "n4" },
+      { "source": "n67", "target": "n26" },
+      { "source": "n67", "target": "n74" },
+      { "source": "n67", "target": "n6" },
+      { "source": "n67", "target": "n75" },
+      { "source": "n67", "target": "n6" },
+      { "source": "n67", "target": "n76" },
+      { "source": "n67", "target": "n6" },
+      { "source": "n67", "target": "n58" },
+      { "source": "n67", "target": "n31" },
+      { "source": "n67", "target": "n6" },
+      { "source": "n67", "target": "n77" },
+      { "source": "n67", "target": "n6" },
+      { "source": "n67", "target": "n33" },
+      { "source": "n35", "target": "n43" },
+      { "source": "n35", "target": "n67" },
+      { "source": "n33", "target": "n78" },
+      { "source": "n33", "target": "n79" },
+      { "source": "n80", "target": "n63" },
+      { "source": "n20", "target": "n64" },
+      { "source": "n20", "target": "n81" },
+      { "source": "n20", "target": "n82" },
+      { "source": "n20", "target": "n83" },
+      { "source": "n20", "target": "n35" },
+      { "source": "n20", "target": "n65" },
+      { "source": "n20", "target": "n65" },
+      { "source": "n20", "target": "n68" },
+      { "source": "n3", "target": "n84" },
+      { "source": "n3", "target": "n6" },
+      { "source": "n73", "target": "n22" },
+      { "source": "n70", "target": "n22" },
+      { "source": "n70", "target": "n23" },
+      { "source": "n70", "target": "n24" },
+      { "source": "n70", "target": "n72" },
+      { "source": "n60", "target": "n22" },
+      { "source": "n60", "target": "n62" },
+      { "source": "n60", "target": "n70" },
+      { "source": "n60", "target": "n21" },
+      { "source": "n49", "target": "n45" },
+      { "source": "n49", "target": "n45" },
+      { "source": "n49", "target": "n85" },
+      { "source": "n49", "target": "n81" },
+      { "source": "n49", "target": "n82" },
+      { "source": "n49", "target": "n83" },
+      { "source": "n49", "target": "n74" },
+      { "source": "n49", "target": "n75" },
+      { "source": "n49", "target": "n45" },
+      { "source": "n49", "target": "n45" },
+      { "source": "n49", "target": "n86" },
+      { "source": "n49", "target": "n81" },
+      { "source": "n49", "target": "n82" },
+      { "source": "n49", "target": "n83" },
+      { "source": "n49", "target": "n13" },
+      { "source": "n49", "target": "n87" },
+      { "source": "n49", "target": "n45" },
+      { "source": "n49", "target": "n45" },
+      { "source": "n49", "target": "n40" },
+      { "source": "n49", "target": "n27" },
+      { "source": "n49", "target": "n45" },
+      { "source": "n86", "target": "n36" },
+      { "source": "n66", "target": "n12" },
+      { "source": "n66", "target": "n26" },
+      { "source": "n66", "target": "n13" },
+      { "source": "n66", "target": "n6" },
+      { "source": "n66", "target": "n87" },
+      { "source": "n66", "target": "n6" },
+      { "source": "n66", "target": "n33" },
+      { "source": "n47", "target": "n22" },
+      { "source": "n47", "target": "n42" },
+      { "source": "n85", "target": "n7" },
+      { "source": "n14", "target": "n26" },
+      { "source": "n14", "target": "n6" },
+      { "source": "n14", "target": "n33" },
+      { "source": "n2", "target": "n22" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n71" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n61" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n51" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n40" },
+      { "source": "n50", "target": "n27" },
+      { "source": "n50", "target": "n9" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n27" },
+      { "source": "n50", "target": "n80" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n88" },
+      { "source": "n50", "target": "n19" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n50", "target": "n45" },
+      { "source": "n10", "target": "n25" }
+    ]
+  }
+};
+
+
+DUMMYAPPS2_CALL_GRAPH = {
+  "callGraph": {
+    "nodes": [
+      { "id": "n18", "label": "com.example.service.StageTwo.refine()", "type": "intermediate" },
+      { "id": "n9",  "label": "java.lang.Object.<init>()", "type": "intermediate" },
+      { "id": "n19", "label": "com.example.service.StageThree.finalizeProcessing()", "type": "intermediate" },
+      { "id": "n11", "label": "com.example.service.BusinessService.processInput()", "type": "intermediate" },
+      { "id": "n13", "label": "com.example.service.StageOne.transform()", "type": "intermediate" },
+      { "id": "n3",  "label": "java.lang.String.trim()", "type": "intermediate" },
+      { "id": "n4",  "label": "com.example.core.VulnerableTemplateEngine.renderTemplate()", "type": "intermediate" },
+      { "id": "n6",  "label": "org.apache.commons.text.StringSubstitutor.<init>()", "type": "vulnerable" },
+      { "id": "n14", "label": "com.example.core.StringUtilsCore.normalize()", "type": "intermediate" },
+      { "id": "n12", "label": "com.example.service.DataPipeline.startPipeline()", "type": "intermediate" },
+      { "id": "n5",  "label": "org.apache.commons.text.lookup.StringLookupFactory.interpolatorStringLookup()", "type": "intermediate" },
+      { "id": "n8",  "label": "com.example.service.BusinessService.<init>()", "type": "intermediate" },
+      { "id": "n7",  "label": "org.apache.commons.text.StringSubstitutor.replace()", "type": "vulnerable" },
+      { "id": "n17", "label": "java.io.PrintStream.println()", "type": "intermediate" },
+      { "id": "n10", "label": "com.example.core.VulnerableTemplateEngine.<init>()", "type": "intermediate" },
+      { "id": "n15", "label": "java.lang.String.toLowerCase()", "type": "intermediate" },
+      { "id": "n1",  "label": "com.example.core.StringUtilsCore.sanitize()", "type": "intermediate" },
+      { "id": "n2",  "label": "java.lang.String.replaceAll()", "type": "intermediate" },
+      { "id": "n16", "label": "com.example.app.MainApplication.main()", "type": "entry" }
+    ],
+
+    "edges": [
+      { "source": "n1",  "target": "n2" },
+      { "source": "n1",  "target": "n3" },
+      { "source": "n4",  "target": "n5" },
+      { "source": "n4",  "target": "n6" },
+      { "source": "n4",  "target": "n7" },
+      { "source": "n8",  "target": "n9" },
+      { "source": "n10", "target": "n9" },
+      { "source": "n11", "target": "n12" },
+      { "source": "n12", "target": "n13" },
+      { "source": "n14", "target": "n15" },
+      { "source": "n16", "target": "n8" },
+      { "source": "n16", "target": "n11" },
+      { "source": "n16", "target": "n17" },
+      { "source": "n13", "target": "n1" },
+      { "source": "n13", "target": "n18" },
+      { "source": "n18", "target": "n14" },
+      { "source": "n18", "target": "n19" },
+      { "source": "n19", "target": "n10" },
+      { "source": "n19", "target": "n4" }
+    ]
+  }
 }
 
 CALL_GRAPH_JSON_PATH = os.getenv("CALL_GRAPH_JSON_PATH", "/Users/bytedance/Downloads/analysis-result.json")
@@ -203,6 +547,7 @@ def run_analysis(
 def get_call_graph(execution_id: Optional[str] = None, db: Session = Depends(get_db)):
     """Return a dummy call graph based on the original request payload.
 
+    If the repo matches Stewella/DummyApps2, return DUMMYAPPS2_CALL_GRAPH.
     If the associated repo/zip/branch indicates a Pet Shop project, return PETSHOP_SAMPLE_CALL_GRAPH.
     Otherwise, return DEFAULT_SAMPLE_CALL_GRAPH.
     """
@@ -218,6 +563,10 @@ def get_call_graph(execution_id: Optional[str] = None, db: Session = Depends(get
         req = json.loads(e.request_json)
     except Exception:
         req = {}
+
+    # Prioritize DummyApps2-specific call graph when the repo matches exactly
+    if is_dummyapps_request(req):
+        return DUMMYAPPS2_CALL_GRAPH
 
     if is_petshop_request(req):
         return PETSHOP_SAMPLE_CALL_GRAPH
@@ -337,10 +686,12 @@ def submit_zip(
 @router.post("/evosuite/run", tags=["analysis"])
 def run_evosuite_endpoint(payload: dict = Body(...)):
     source_dir = payload.get("source_dir")
+    target_method = payload.get("target_method")
+    search_budget = payload.get("search_budget")
     if not source_dir:
         raise HTTPException(status_code=400, detail="source_dir is required")
     try:
-        result = run_evosuite_in_docker(source_dir)
+        result = run_evosuite_in_docker(source_dir, target_method_name=target_method, search_budget=search_budget)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"EvoSuite run failed: {e}")
@@ -362,13 +713,28 @@ def is_petshop_request(req: dict) -> bool:
     return is_petshop_string(repo) or is_petshop_string(src) or is_petshop_string(branch)
 
 
+def is_dummyapps_request(req: dict) -> bool:
+    """Return True if repository_url matches Stewella/DummyApps2."""
+    repo = (req or {}).get("repository_url")
+    if not repo:
+        return False
+    s = repo.strip().lower()
+    s = s.replace("git@github.com:", "github.com/")
+    s = s.rstrip("/")
+    if s.endswith(".git"):
+        s = s[:-4]
+    return s.endswith("github.com/stewella/dummyapps2")
+
+
 @router.post("/evosuite/run", tags=["analysis"])
 def run_evosuite_endpoint(payload: dict = Body(...)):
     source_dir = payload.get("source_dir")
+    target_method = payload.get("target_method")
+    search_budget = payload.get("search_budget")
     if not source_dir:
         raise HTTPException(status_code=400, detail="source_dir is required")
     try:
-        result = run_evosuite_in_docker(source_dir)
+        result = run_evosuite_in_docker(source_dir, target_method_name=target_method, search_budget=search_budget)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"EvoSuite run failed: {e}")
