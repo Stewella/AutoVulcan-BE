@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     DATABASE_URL: str = "sqlite:///./dev.db"
     CORE_ENGINE_HOST: str = "http://example:9000"
+    # EvoSuite runner settings
+    EVOSUITE_ENABLED: bool = False
+    EVOSUITE_IMAGE: str = "eclipse-temurin:11-jdk"
+    EVOSUITE_JAR_PATH: Optional[str] = None  # e.g., /opt/tools/evosuite.jar on host
+    EVOSUITE_SEARCH_BUDGET: int = 30
 
     # SSH tunnel and remote PostgreSQL settings (override via environment/.env)
     USE_SSH_TUNNEL: bool = True

@@ -13,6 +13,8 @@ import re
 import json
 from crud import create_execution
 from models import Execution
+from fastapi import Body, HTTPException
+from services.evosuite_client import run_evosuite_in_docker
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 
@@ -25,7 +27,19 @@ ALLOWED_ZIP_TYPES = {
     "multipart/x-zip",
 }
 
-SAMPLE_CALL_GRAPH = {
+# Loader to parse external analysis JSON into the call graph format used here
+def load_call_graph_from_json(path: str) -> Optional[dict]:
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        cg = data.get("callGraph")
+        if isinstance(cg, dict) and "nodes" in cg and "edges" in cg:
+            return {"callGraph": cg}
+    except Exception:
+        pass
+    return None
+
+DEFAULT_SAMPLE_CALL_GRAPH = {
     "callGraph": {
         "nodes": [
             {"id": "n1",  "label": "MainApp.main()", "type": "entry"},
@@ -69,6 +83,23 @@ SAMPLE_CALL_GRAPH = {
     }
 }
 
+# Pet Shop dummy graph to return when request indicates petshop
+PETSHOP_SAMPLE_CALL_GRAPH = {
+    "callGraph": {
+        "nodes": [
+            {"id": "n1", "label": "PetShopApplication.main()", "type": "entry"},
+            {"id": "n2", "label": "SpringApplication.run()", "type": "vulnerable"},
+        ],
+        "edges": [
+            {"source": "n1", "target": "n2"},
+        ],
+    }
+}
+
+CALL_GRAPH_JSON_PATH = os.getenv("CALL_GRAPH_JSON_PATH", "/Users/bytedance/Downloads/analysis-result.json")
+_loaded_cg = load_call_graph_from_json(CALL_GRAPH_JSON_PATH)
+SAMPLE_CALL_GRAPH = _loaded_cg or DEFAULT_SAMPLE_CALL_GRAPH
+
 
 def normalize_cve(cve: str) -> str:
     """Return CVE as string (already validated and normalized upstream)."""
@@ -89,6 +120,7 @@ def make_request_obj(
     timeout_seconds: int,
     submitted_by: Optional[str],
     submitted_by_user_id: Optional[int] = None,
+    branch: Optional[str] = None,
     repository_url: Optional[str] = None,
     source_path: Optional[str] = None,
 ) -> dict:
@@ -102,6 +134,8 @@ def make_request_obj(
         "submitted_by": submitted_by,
         "submitted_by_user_id": submitted_by_user_id,
     }
+    if branch:
+        base["branch"] = branch
     if repository_url:
         base["repository_url"] = repository_url
     if source_path:
@@ -163,8 +197,28 @@ def run_analysis(
 
 @router.get("/graph", response_model=CallGraphResponse, summary="Get call graph")
 def get_call_graph(execution_id: Optional[str] = None, db: Session = Depends(get_db)):
-    """Return a sample call graph. Real call graph not implemented yet."""
-    return SAMPLE_CALL_GRAPH
+    """Return a dummy call graph based on the original request payload.
+
+    If the associated repo/zip/branch indicates a Pet Shop project, return PETSHOP_SAMPLE_CALL_GRAPH.
+    Otherwise, return DEFAULT_SAMPLE_CALL_GRAPH.
+    """
+    # If no execution id provided, default to sample graph
+    if not execution_id:
+        return DEFAULT_SAMPLE_CALL_GRAPH
+
+    e = db.get(Execution, execution_id)
+    if not e or not e.request_json:
+        return DEFAULT_SAMPLE_CALL_GRAPH
+
+    try:
+        req = json.loads(e.request_json)
+    except Exception:
+        req = {}
+
+    if is_petshop_request(req):
+        return PETSHOP_SAMPLE_CALL_GRAPH
+
+    return DEFAULT_SAMPLE_CALL_GRAPH
 
 
 # Accept CVE in format CVE-YYYY-NNNN+ or the literal OTHER; also accept GHSA-xxxx-xxxx-xxxx
@@ -192,6 +246,7 @@ def validate_cve_format(cve: str) -> str:
 def submit_repo(
     background_tasks: BackgroundTasks,
     repository_url: str = Form(..., description="Git repository URL to fetch"),
+    branch: Optional[str] = Form(None, description="Branch name to fetch"),
     target_cve: str = Form(..., description="Target identifier: CVE-YYYY-NNNN+ or GHSA-xxxx-xxxx-xxxx, or OTHER"),
     target_method: Optional[str] = Form(None, description="Method to focus on"),
     target_line: Optional[int] = Form(None, description="Line number to focus on"),
@@ -204,6 +259,7 @@ def submit_repo(
     exec_id = new_execution_id()
     request_obj = make_request_obj(
         source_type="repo",
+        branch=branch,
         repository_url=repository_url,
         target_cve=target_cve_clean,
         target_method=target_method,
@@ -268,3 +324,43 @@ def submit_zip(
         message="ZIP submission received",
         started_at=datetime.utcnow(),
     )
+
+
+@router.post("/evosuite/run", tags=["analysis"])
+def run_evosuite_endpoint(payload: dict = Body(...)):
+    source_dir = payload.get("source_dir")
+    if not source_dir:
+        raise HTTPException(status_code=400, detail="source_dir is required")
+    try:
+        result = run_evosuite_in_docker(source_dir)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"EvoSuite run failed: {e}")
+
+# Heuristics to detect "pet shop" in request payload
+PETSHOP_REGEX = re.compile(r"pet\s*shop", re.IGNORECASE)
+
+def is_petshop_string(s: Optional[str]) -> bool:
+    if not s:
+        return False
+    return PETSHOP_REGEX.search(s) is not None
+
+
+def is_petshop_request(req: dict) -> bool:
+    """Return True if repository_url, source_path, or branch hints at the Pet Shop project."""
+    repo = (req or {}).get("repository_url")
+    src = (req or {}).get("source_path")
+    branch = (req or {}).get("branch")
+    return is_petshop_string(repo) or is_petshop_string(src) or is_petshop_string(branch)
+
+
+@router.post("/evosuite/run", tags=["analysis"])
+def run_evosuite_endpoint(payload: dict = Body(...)):
+    source_dir = payload.get("source_dir")
+    if not source_dir:
+        raise HTTPException(status_code=400, detail="source_dir is required")
+    try:
+        result = run_evosuite_in_docker(source_dir)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"EvoSuite run failed: {e}")

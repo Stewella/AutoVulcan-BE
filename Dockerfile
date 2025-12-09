@@ -1,4 +1,4 @@
-# Use a lightweight Python base image compatible with our dependencies
+# Base image with Python 3.9 slim to keep image small and avoid JDK/Maven installation
 FROM python:3.9-slim
 
 # Set work directory
@@ -8,12 +8,14 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies required for repository cloning
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Install system dependencies: git only (remove JDK/Maven to speed up build)
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt ./
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code
 COPY . .
@@ -22,4 +24,4 @@ COPY . .
 EXPOSE 8000
 
 # Default command: start FastAPI with Uvicorn
-CMD ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

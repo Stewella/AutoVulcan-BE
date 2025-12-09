@@ -43,15 +43,17 @@ def get_pipeline_progress(execution_id: str, db: Session = Depends(get_db)):
     m_source = has_any(["Repository cloned successfully", "Using extracted source at "])  # step 2
     m_target = has_any(["Collecting target parameters"])  # step 3
     m_build = has_any(["Building project..."])  # step 4
-    m_invoke = has_any(["Invoking core-engine...", "core-engine HTTP call completed", "core-engine docker exec completed"])  # step 5
-    m_parse = has_any(["Parsing core-engine result"])  # step 6
-    m_done = state == "completed" or has_any(["Pipeline completed"])  # step 7
+    m_evo = has_any(["Running EvoSuite...", "EvoSuite completed", "EvoSuite failed"])  # step 5
+    m_invoke = has_any(["Invoking core-engine...", "core-engine HTTP call completed", "core-engine docker exec completed"])  # step 6
+    m_parse = has_any(["Parsing core-engine result"])  # step 7
+    m_done = state == "completed" or has_any(["Pipeline completed"])  # step 8
 
     steps = [
         {"key": "start", "label": "Start", "done": m_start},
         {"key": "source", "label": "Prepare Source", "done": m_source},
         {"key": "target", "label": "Collect Parameters", "done": m_target},
         {"key": "build", "label": "Build Project", "done": m_build},
+        {"key": "evosuite", "label": "Run EvoSuite", "done": m_evo},
         {"key": "core", "label": "Run Core Engine", "done": m_invoke},
         {"key": "parse", "label": "Parse Results", "done": m_parse},
         {"key": "complete", "label": "Completed", "done": m_done},

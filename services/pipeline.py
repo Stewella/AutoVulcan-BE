@@ -2,6 +2,8 @@ import asyncio
 from sqlalchemy.orm import Session
 from crud import create_execution, update_execution_logs, update_execution_result
 from services.core_client import call_core_engine_http, call_core_engine_via_docker
+from services.evosuite_client import run_evosuite_in_docker
+from config import settings
 import json
 import os
 import subprocess
@@ -94,6 +96,19 @@ async def _run_pipeline(db: Session, exec_id: str, req: dict):
         add_log("Building project...")
         await asyncio.sleep(2)
 
+        # EvoSuite step (compile sources and generate tests)
+        evo_res = None
+        if not settings.EVOSUITE_ENABLED:
+            add_log("EvoSuite disabled; skipping")
+        else:
+            add_log("Running EvoSuite...")
+            try:
+                evo_res = run_evosuite_in_docker(source_path, timeout=timeout_seconds, search_budget=timeout_seconds)
+                add_log("EvoSuite completed")
+            except Exception as e_evo:
+                add_log(f"EvoSuite failed: {e_evo}")
+                evo_res = {"error": str(e_evo)}
+
         add_log("Invoking core-engine...")
         # Choose one method: HTTP or Docker exec
         core_res = None
@@ -108,13 +123,14 @@ async def _run_pipeline(db: Session, exec_id: str, req: dict):
                 add_log("core-engine docker exec completed")
             except Exception as e_docker:
                 add_log(f"core-engine fallback failed: {e_docker}")
-                # mark as failed
-                update_execution_result(db, exec_id, {"error": str(e_docker)}, status="failed")
+                # mark as failed (still include EvoSuite payload if any)
+                update_execution_result(db, exec_id, {"evosuite": evo_res, "error": str(e_docker)}, status="failed")
                 return
 
         add_log("Parsing core-engine result")
         # core_res expected to be dict with 'summary' and 'cve_details'
-        update_execution_result(db, exec_id, core_res, status="completed")
+        combined = {"evosuite": evo_res, "core": core_res}
+        update_execution_result(db, exec_id, combined, status="completed")
         add_log("Pipeline completed")
     except Exception as e:
         add_log(f"Pipeline error: {e}")
