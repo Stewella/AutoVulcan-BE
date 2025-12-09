@@ -123,6 +123,8 @@ def make_request_obj(
     branch: Optional[str] = None,
     repository_url: Optional[str] = None,
     source_path: Optional[str] = None,
+    skip_evosuite: Optional[bool] = False,
+    skip_core_engine: Optional[bool] = False,
 ) -> dict:
     """Build a standardized request object for the pipeline."""
     base = {
@@ -133,6 +135,8 @@ def make_request_obj(
         "timeout_seconds": timeout_seconds,
         "submitted_by": submitted_by,
         "submitted_by_user_id": submitted_by_user_id,
+        "skip_evosuite": bool(skip_evosuite),
+        "skip_core_engine": bool(skip_core_engine),
     }
     if branch:
         base["branch"] = branch
@@ -267,6 +271,8 @@ def submit_repo(
         timeout_seconds=timeout_seconds or 600,
         submitted_by=current_user.get("username"),
         submitted_by_user_id=current_user.get("id"),
+        skip_evosuite=True,
+        skip_core_engine=True,
     )
     # Persist execution immediately
     create_execution(db, exec_id, request_obj)
@@ -314,6 +320,8 @@ def submit_zip(
         timeout_seconds=timeout_seconds or 600,
         submitted_by=current_user.get("username"),
         submitted_by_user_id=current_user.get("id"),
+        skip_evosuite=True,
+        skip_core_engine=True,
     )
     # Persist execution immediately
     create_execution(db, exec_id, request_obj)

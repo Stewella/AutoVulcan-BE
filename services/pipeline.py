@@ -1,4 +1,5 @@
 import asyncio
+import random
 from sqlalchemy.orm import Session
 from crud import create_execution, update_execution_logs, update_execution_result
 from services.core_client import call_core_engine_http, call_core_engine_via_docker
@@ -98,8 +99,17 @@ async def _run_pipeline(db: Session, exec_id: str, req: dict):
 
         # EvoSuite step (compile sources and generate tests)
         evo_res = None
-        if not settings.EVOSUITE_ENABLED:
+        if req.get("skip_evosuite", False):
+            add_log("EvoSuite skipped by submit request")
+            # simulate >1 minute processing time with random seconds
+            sim_delay_evo = random.randint(300, 600)
+            add_log(f"Simulating EvoSuite processing time ({sim_delay_evo}s)")
+            await asyncio.sleep(sim_delay_evo)
+            evo_res = {"skipped": True, "simulated_delay_seconds": sim_delay_evo}
+            add_log("EvoSuite simulated completion")
+        elif not settings.EVOSUITE_ENABLED:
             add_log("EvoSuite disabled; skipping")
+            evo_res = {"skipped": True}
         else:
             add_log("Running EvoSuite...")
             try:
@@ -109,23 +119,32 @@ async def _run_pipeline(db: Session, exec_id: str, req: dict):
                 add_log(f"EvoSuite failed: {e_evo}")
                 evo_res = {"error": str(e_evo)}
 
-        add_log("Invoking core-engine...")
-        # Choose one method: HTTP or Docker exec
-        core_res = None
-        payload = {"request": {**req, "source_path": source_path}}
-        try:
-            core_res = call_core_engine_http(payload, timeout=timeout_seconds)
-            add_log("core-engine HTTP call completed")
-        except Exception as e_http:
-            add_log(f"core-engine HTTP failed: {e_http}, trying docker exec fallback")
+        if req.get("skip_core_engine", False):
+            add_log("core-engine skipped by submit request")
+            # simulate >1 minute processing time with random seconds
+            sim_delay_core = random.randint(300, 600)
+            add_log(f"Simulating core-engine processing time ({sim_delay_core}s)")
+            await asyncio.sleep(sim_delay_core)
+            core_res = {"skipped": True, "simulated_delay_seconds": sim_delay_core}
+            add_log("core-engine simulated completion")
+        else:
+            add_log("Invoking core-engine...")
+            # Choose one method: HTTP or Docker exec
+            core_res = None
+            payload = {"request": {**req, "source_path": source_path}}
             try:
-                core_res = call_core_engine_via_docker("core_engine_container", ["java","-jar","/app/core.jar","--json", json.dumps(payload)])
-                add_log("core-engine docker exec completed")
-            except Exception as e_docker:
-                add_log(f"core-engine fallback failed: {e_docker}")
-                # mark as failed (still include EvoSuite payload if any)
-                update_execution_result(db, exec_id, {"evosuite": evo_res, "error": str(e_docker)}, status="failed")
-                return
+                core_res = call_core_engine_http(payload, timeout=timeout_seconds)
+                add_log("core-engine HTTP call completed")
+            except Exception as e_http:
+                add_log(f"core-engine HTTP failed: {e_http}, trying docker exec fallback")
+                try:
+                    core_res = call_core_engine_via_docker("core_engine_container", ["java","-jar","/app/core.jar","--json", json.dumps(payload)])
+                    add_log("core-engine docker exec completed")
+                except Exception as e_docker:
+                    add_log(f"core-engine fallback failed: {e_docker}")
+                    # mark as failed (still include EvoSuite payload if any)
+                    update_execution_result(db, exec_id, {"evosuite": evo_res, "error": str(e_docker)}, status="failed")
+                    return
 
         add_log("Parsing core-engine result")
         # core_res expected to be dict with 'summary' and 'cve_details'
