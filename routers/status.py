@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from db import get_db
 from models import Execution
 import json
+from auth.jwt import get_current_user
+
+from typing import Optional
+from config import settings
 
 router = APIRouter(prefix="/status", tags=["status"]) 
 
@@ -84,3 +88,96 @@ def get_pipeline_progress(execution_id: str, db: Session = Depends(get_db)):
         "started_at": e.started_at,
         "finished_at": e.finished_at,
     }
+
+
+def _humanize_duration(seconds: int) -> str:
+    m, s = divmod(int(seconds), 60)
+    return f"{m}m {s}s" if m else f"{s}s"
+
+@router.get("/user/executions")
+def list_user_executions(
+    limit: int = 50,
+    state: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Return a list of executions that were submitted by the given user.
+
+    - Requires authentication; users can only view their own executions.
+    - Optional query params:
+      - limit: max number of items
+      - state: filter by execution state (e.g., running, completed, failed)
+    """
+    # Authorization: Bearer <JWT>
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    try:
+        user_id = int(current_user.get("id"))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    q = db.query(Execution).filter(Execution.submitted_by_user_id == user_id)
+    if state:
+        q = q.filter(Execution.status == state)
+    q = q.order_by(Execution.started_at.desc()).limit(limit)
+
+    rows = q.all()
+    items = []
+    for e in rows:
+        try:
+            req = json.loads(e.request_json or "{}")
+        except Exception:
+            req = {}
+        try:
+            res = json.loads(e.result_json or "{}") if e.result_json else {}
+        except Exception:
+            res = {}
+
+        repo_url = req.get("repository_url")
+        branch = req.get("branch")
+        source_type = req.get("source_type")
+        # derive a friendly repository name from URL, if present
+        repo_name = None
+        if repo_url:
+            repo_name = repo_url.rstrip("/").split("/")[-1]
+            if repo_name.endswith(".git"):
+                repo_name = repo_name[:-4]
+        if not repo_name and source_type == "zip":
+            repo_name = "uploaded-zip"
+
+        commit = res.get("commit") or res.get("commit_id")
+        cves = res.get("cves") or []
+        if not cves:
+            tc = (req or {}).get("target_cve")
+            if tc and tc.upper() != "OTHER":
+                cves = [tc]
+
+        duration_seconds = None
+        duration_human = None
+        if e.started_at and e.finished_at:
+            duration_seconds = int((e.finished_at - e.started_at).total_seconds())
+            duration_human = _humanize_duration(duration_seconds)
+
+        base_analysis_prefix = settings.API_V1_STR + "/analysis"
+        status_label = "Success" if (e.status or "").lower() == "completed" else ("Failed" if (e.status or "").lower() == "failed" else "Running")
+        items.append({
+            "execution_id": e.id,
+            "status": e.status,
+            "status_label": status_label,
+            "repository": repo_name,
+            "repository_url": repo_url,
+            "branch": branch,
+            "commit": commit,
+            "cves": cves,
+            "duration_seconds": duration_seconds,
+            "duration_human": duration_human,
+            "started_at": e.started_at,
+            "finished_at": e.finished_at,
+            # convenience URLs for UI actions
+            "view_url": f"{base_analysis_prefix}/result/{e.id}",
+            "download_pdf_url": f"{base_analysis_prefix}/result/export/{e.id}?format=pdf",
+            "download_json_url": f"{base_analysis_prefix}/result/export/{e.id}?format=json",
+            "share_url": f"{base_analysis_prefix}/result/{e.id}",
+        })
+
+    return {"count": len(items), "items": items}
